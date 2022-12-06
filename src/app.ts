@@ -22,8 +22,6 @@ run().catch(console.log);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use((req: Request, res: Response, next) => {
-
-  // @ts-ignore
   req.user = {
     _id: '638b2075c281fe16e99e5b46'
   }

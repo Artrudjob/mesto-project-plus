@@ -15,7 +15,7 @@ export const createCard = (req: Request, res: Response) => {
         })
       } else {
         res.status(SERVER_ERROR_CODE).send({
-          message: 'Произошла ошибка'
+          message: `На сервере произошла ошибка - ${err}`
         });
       }
     });
@@ -25,48 +25,54 @@ export const getAllCards = (req: Request, res: Response) => {
   Card.find({})
     .then((card) => res.status(OK_CODE).send(card))
     .catch((err) => res.status(SERVER_ERROR_CODE).send({
-      message: `Произошла ошибка - ${err}`
+      message: `На сервере произошла ошибка - ${err}`
     }));
 }
 
 export const removeCard = (req: Request, res: Response) => {
-  Card.findById(req.params.id)
-    .then(card => {
-      Card.findByIdAndRemove(card?._id)
-        .then(card => res.status(OK_CODE).send(card))
-        .catch((err) => res.status(SERVER_ERROR_CODE).send({
-          message: `Произошла ошибка - ${err}`
-        }));
-    })
-    .catch(err => res.status(NOT_FOUND_CODE).send({
-      message: `Карточка с указанным _id не найдена. Ошибка - ${err}`
-    }))
+  Card.findByIdAndRemove(req.params.id)
+    .then(card => res.status(OK_CODE).send(card))
+    .catch((err) => {
+      if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
+        res.status(NOT_FOUND_CODE).send({
+          message: `Карточка с указанным _id не найдена. Ошибка - ${err}`
+        })
+      } else {
+        res.status(SERVER_ERROR_CODE).send({
+          message: `На сервере произошла ошибка - ${err}`
+        })
+      }
+    });
 }
 
 export const likeCard = (req: Request, res: Response) => {
-  Card.findById(req.params.cardId)
-    .then(card => {
-      Card.findByIdAndUpdate(card?._id, {$addToSet: {likes: req.body._id}}, {new: true})
-        .then(liked => res.status(OK_CODE).send(liked))
-        .catch((err) => res.status(SERVER_ERROR_CODE).send({
-          message: `Произошла ошибка - ${err}`
-        }));
-    })
-    .catch(err => res.status(NOT_FOUND_CODE).send({
-      message: `Передан несуществующий _id карточки. Ошибка - ${err}`
-    }))
+  Card.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: req.body._id}}, {new: true})
+    .then(liked => res.status(OK_CODE).send(liked))
+    .catch((err) => {
+      if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
+        res.status(NOT_FOUND_CODE).send({
+          message: `Передан несуществующий _id карточки. Ошибка - ${err}`
+        })
+      } else {
+        res.status(SERVER_ERROR_CODE).send({
+          message: `На сервере произошла ошибка - ${err}`
+        })
+      }
+    });
 }
 
 export const dislikeCard = (req: Request, res: Response) => {
-  Card.findById(req.params.cardId)
-    .then(card => {
-      Card.findByIdAndUpdate(card?._id, {$pull: {likes: req.body._id}}, {new: true})
-        .then(disliked => res.status(OK_CODE).send(disliked))
-        .catch((err) => res.status(SERVER_ERROR_CODE).send({
+  Card.findByIdAndUpdate(req.params.cardId, {$pull: {likes: req.body._id}}, {new: true})
+    .then(disliked => res.status(OK_CODE).send(disliked))
+    .catch((err) => {
+      if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
+        res.status(NOT_FOUND_CODE).send({
           message: `Передан несуществующий _id карточки. Ошибка - ${err}`
-        }));
+        })
+      } else {
+        res.status(SERVER_ERROR_CODE).send({
+          message: `На сервере произошла ошибка - ${err}`
+        })
+      }
     })
-    .catch(err => res.status(NOT_FOUND_CODE).send({
-      message: `Передан несуществующий _id карточки. Ошибка - ${err}`
-    }));
 }

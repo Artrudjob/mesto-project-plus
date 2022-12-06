@@ -1,7 +1,7 @@
 {
   "name": "mestoAPI",
   "version": "1.0.0",
-  "description": "< Добавьте описание проекта в свободной форме >",
+  "description": "Проект направлен на разработку серверной части для сервиса Mesto",
   "main": "dist/app.js",
   "scripts": {
     "lint": "npx eslint src/**/*.ts",

@@ -16,7 +16,7 @@ export const createUser = (req: Request, res: Response) => {
         })
       } else {
         res.status(SERVER_ERROR_CODE).send({
-          message: `Произошла ошибка - ${err}`
+          message: `На сервере произошла ошибка - ${err}`
         });
       }
     });
@@ -32,7 +32,7 @@ export const findByUserId = (req: Request, res: Response) => {
         })
       } else {
         res.status(SERVER_ERROR_CODE).send({
-          message: `Произошла ошибка - ${err}`
+          message: `На сервере произошла ошибка - ${err}`
         });
       }
     });
@@ -41,7 +41,7 @@ export const findByUserId = (req: Request, res: Response) => {
 export const getAllUsers = (req: Request, res: Response) => {
   User.find({})
     .then((user) => res.status(OK_CODE).send(user))
-    .catch((err) => res.status(SERVER_ERROR_CODE).send({message: `Произошла ошибка - ${err}`}));
+    .catch((err) => res.status(SERVER_ERROR_CODE).send({message: `На сервере произошла ошибка - ${err}`}));
 }
 
 export const updateProfileUser = (req: Request, res: Response) => {
@@ -50,57 +50,54 @@ export const updateProfileUser = (req: Request, res: Response) => {
     about: req.body.about
   }
 
-  // @ts-ignore
-  User.findById(req.user._id)
-    .then(user => {
-      User.findByIdAndUpdate(user?._id, updatedProfile, {
-        new: true,
-        runValidators: true,
-        upsert: false
-      })
-        .then(userProfile => res.status(OK_CODE).send(userProfile))
-        .catch((err) => {
-          if (err.name === 'ValidationError') {
-            console.log(err);
-            res.status(ERROR_CODE).send({
-              message: `Переданы некорректные данные при обновлении пользователя. Ошибка - ${err}`
-            })
-          } else {
-            res.status(SERVER_ERROR_CODE).send({
-              message: `Произошла ошибка - ${err}`
-            });
-          }
-        });
+  if (req.user) {
+    User.findByIdAndUpdate(req.user._id, updatedProfile, {
+      new: true,
+      runValidators: true,
+      upsert: false
     })
-    .catch(err => res.status(NOT_FOUND_CODE).send({
-      message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
-    }));
+      .then(userProfile => res.status(OK_CODE).send(userProfile))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          res.status(ERROR_CODE).send({
+            message: `Переданы некорректные данные при обновлении пользователя. Ошибка - ${err}`
+          })
+        } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
+          res.status(NOT_FOUND_CODE).send({
+            message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
+          })
+        } else {
+          res.status(SERVER_ERROR_CODE).send({
+            message: `На сервере произошла ошибка - ${err}`
+          });
+        }
+      });
+  }
 }
 
 export const updateAvatarUser = (req: Request, res: Response) => {
-  // @ts-ignore
-  User.findById(req.user._id)
-    .then(user => {
-      User.findByIdAndUpdate(user?._id, {avatar: req.body.avatar}, {
-        new: true,
-        runValidators: true,
-        upsert: false
-      })
-        .then(userAvatar => res.status(OK_CODE).send(userAvatar))
-        .catch((err) => {
-          if (err.name === 'ValidationError') {
-            console.log(err);
-            res.status(ERROR_CODE).send({
-              message: `Переданы некорректные данные при обновлении аватара. Ошибка - ${err}`
-            })
-          } else {
-            res.status(SERVER_ERROR_CODE).send({
-              message: `Произошла ошибка - ${err}`
-            });
-          }
-        });
+  if (req.user) {
+    User.findByIdAndUpdate(req.user._id, {avatar: req.body.avatar}, {
+      new: true,
+      runValidators: true,
+      upsert: false
     })
-    .catch(err => res.status(NOT_FOUND_CODE).send({
-      message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
-    }));
+      .then(userAvatar => res.status(OK_CODE).send(userAvatar))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          console.log(err);
+          res.status(ERROR_CODE).send({
+            message: `Переданы некорректные данные при обновлении аватара. Ошибка - ${err}`
+          })
+        } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
+          res.status(NOT_FOUND_CODE).send({
+            message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
+          })
+        } else {
+          res.status(SERVER_ERROR_CODE).send({
+            message: `На сервере произошла ошибка - ${err}`
+          });
+        }
+      });
+  }
 }
