@@ -8,15 +8,14 @@ import { requestLogger, errorLogger } from './middlewares/logger';
 import { createUser, login } from './controllers/users';
 import { celebrate, errors, Joi } from 'celebrate';
 import { SERVER_ERROR_CODE } from './constants/statusCodes';
+import { PORT, DB_ADDRESS } from '../config';
 
 const app = express();
 const bodyParser = require('body-parser');
-const { PORT = 3000 } = process.env;
-const url = 'mongodb://localhost:27017/';
 
 async function run() {
   try {
-    await mongoose.connect(`${url}mestodb`);
+    await mongoose.connect(`${DB_ADDRESS}`);
     console.log('Подключение установлено!');
   } catch (err) {
     console.log(err)

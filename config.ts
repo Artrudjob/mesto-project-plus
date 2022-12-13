@@ -1,0 +1,5 @@
+export const {
+  PORT = 3000,
+  DB_ADDRESS = 'mongodb://localhost:27017/mestodb',
+  JWT_SECRET = '0A51B6AFEA47A4B145BFB41FFA482E12B8482016D9E39D4FB09853219AC7E5BC'
+} = process.env

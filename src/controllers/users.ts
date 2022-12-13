@@ -10,6 +10,7 @@ import { BadRequestErr } from '../errors/bad-request-err';
 import { UnauthorizedErr } from '../errors/unauthorized-err';
 import { NotFoundCodeErr } from '../errors/not-found-code-err';
 import { updateInfoUser } from '../utils/updateInfoUser';
+import { JWT_SECRET } from '../../config';
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   bcryp.hash(req.body.password, 10)
@@ -83,7 +84,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
           const token = jwt.sign(
             {_id: user._id.toString()},
-            '0A51B6AFEA47A4B145BFB41FFA482E12B8482016D9E39D4FB09853219AC7E5BC',
+            JWT_SECRET,
             { expiresIn: '7d'}
             )
 

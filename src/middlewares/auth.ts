@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { UNAUTHORIZED_CODE } from '../constants/statusCodes';
+import { JWT_SECRET } from '../../config';
 
 // @ts-ignore
 interface ISessionRequest extends Request {
@@ -21,7 +22,7 @@ export default (req: ISessionRequest, res: Response, next: NextFunction) => {
   let payload;
 
   try {
-    payload = jwt.verify(token, '0A51B6AFEA47A4B145BFB41FFA482E12B8482016D9E39D4FB09853219AC7E5BC');
+    payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return res.status(UNAUTHORIZED_CODE).send({
       message: 'Необходима авторизация'
