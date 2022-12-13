@@ -1,50 +1,52 @@
 import User from '../models/user';
-import {Request, Response} from 'express';
-import {CREATED_CODE, ERROR_CODE, NOT_FOUND_CODE, OK_CODE, SERVER_ERROR_CODE} from '../constants/statusCodes';
+import { NextFunction, Request, Response } from 'express';
+import bcryp from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import {
+  CREATED_CODE,
+  OK_CODE
+} from '../constants/statusCodes';
+import { BadRequestErr } from '../errors/bad-request-err';
+import { UnauthorizedErr } from '../errors/unauthorized-err';
+import { NotFoundCodeErr } from '../errors/not-found-code-err';
 
-export const createUser = (req: Request, res: Response) => {
-  User.create({
-    name: req.body.name,
-    about: req.body.about,
-    avatar: req.body.avatar
-  })
-    .then((user) => res.status(CREATED_CODE).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE).send({
-          message: `Переданы некорректные данные при создании пользователя. Ошибка - ${err}`
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
+  bcryp.hash(req.body.password, 10)
+    .then((hash) => User.create({
+        email: req.body.email,
+        password: hash,
+        name: req.body.name,
+        about: req.body.about,
+        avatar: req.body.avatar
+      })
+        .then((user) => res.status(CREATED_CODE).send(user))
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            throw new BadRequestErr('Переданы некорректные данные при создании пользователя');
+          }
         })
-      } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        });
-      }
-    });
+        .catch(next)
+    )
 }
 
-export const findByUserId = (req: Request, res: Response) => {
+export const findByUserId = (req: Request, res: Response, next: NextFunction) => {
   User.findById(req.params.userId)
     .then((user) => res.status(OK_CODE).send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(NOT_FOUND_CODE).send({
-          message: `Запрашиваемый пользователь не найден. Ошибка - ${err}`
-        })
-      } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        });
+        throw new NotFoundCodeErr('Запрашиваемый пользователь не найден');
       }
-    });
+    })
+    .catch(next)
 }
 
-export const getAllUsers = (req: Request, res: Response) => {
+export const getAllUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
     .then((user) => res.status(OK_CODE).send(user))
-    .catch((err) => res.status(SERVER_ERROR_CODE).send({message: `На сервере произошла ошибка - ${err}`}));
+    .catch(next);
 }
 
-export const updateProfileUser = (req: Request, res: Response) => {
+export const updateProfileUser = (req: Request, res: Response, next: NextFunction) => {
   const updatedProfile = {
     name: req.body.name,
     about: req.body.about
@@ -56,26 +58,21 @@ export const updateProfileUser = (req: Request, res: Response) => {
       runValidators: true,
       upsert: false
     })
-      .then(userProfile => res.status(OK_CODE).send(userProfile))
+      .then(userProfile => {
+        res.status(OK_CODE).send(userProfile)
+      })
       .catch((err) => {
         if (err.name === 'ValidationError') {
-          res.status(ERROR_CODE).send({
-            message: `Переданы некорректные данные при обновлении пользователя. Ошибка - ${err}`
-          })
+          throw new BadRequestErr('Переданы некорректные данные при обновлении пользователя');
         } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-          res.status(NOT_FOUND_CODE).send({
-            message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
-          })
-        } else {
-          res.status(SERVER_ERROR_CODE).send({
-            message: `На сервере произошла ошибка - ${err}`
-          });
+          throw new NotFoundCodeErr('Пользователь с указанным _id не найден');
         }
-      });
+      })
+      .catch(next)
   }
 }
 
-export const updateAvatarUser = (req: Request, res: Response) => {
+export const updateAvatarUser = (req: Request, res: Response, next: NextFunction) => {
   if (req.user) {
     User.findByIdAndUpdate(req.user._id, {avatar: req.body.avatar}, {
       new: true,
@@ -85,19 +82,46 @@ export const updateAvatarUser = (req: Request, res: Response) => {
       .then(userAvatar => res.status(OK_CODE).send(userAvatar))
       .catch((err) => {
         if (err.name === 'ValidationError') {
-          console.log(err);
-          res.status(ERROR_CODE).send({
-            message: `Переданы некорректные данные при обновлении аватара. Ошибка - ${err}`
-          })
+          throw new BadRequestErr('Переданы некорректные данные при обновлении аватара');
         } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-          res.status(NOT_FOUND_CODE).send({
-            message: `Пользователь с указанным _id не найден. Ошибка - ${err}`
-          })
-        } else {
-          res.status(SERVER_ERROR_CODE).send({
-            message: `На сервере произошла ошибка - ${err}`
-          });
+          throw new NotFoundCodeErr('Пользователь с указанным _id не найден');
         }
-      });
+      })
+      .catch(next)
   }
+}
+
+export const login = (req: Request, res: Response, next: NextFunction) => {
+  User.findOne({ email: req.body.email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        throw new UnauthorizedErr('Неправильные почта или пароль')
+      }
+
+      return bcryp.compare(req.body.password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            throw new UnauthorizedErr('Неправильные почта или пароль')
+          }
+
+          const token = jwt.sign(
+            {_id: user._id.toString()},
+            '0A51B6AFEA47A4B145BFB41FFA482E12B8482016D9E39D4FB09853219AC7E5BC',
+            { expiresIn: '7d'}
+            )
+
+          res.cookie('token', token, { httpOnly: true }).status(OK_CODE).send({
+              loggedIn: true
+            });
+        })
+        .catch(next)
+    })
+}
+
+export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
+  User.findById({ _id: req.user?._id })
+    .then((user) => {
+      res.status(OK_CODE).send(user);
+    })
+    .catch(next)
 }

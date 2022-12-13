@@ -1,78 +1,68 @@
 import Card from '../models/card';
-import {Request, Response} from 'express';
-import {CREATED_CODE, ERROR_CODE, NOT_FOUND_CODE, OK_CODE, SERVER_ERROR_CODE} from "../constants/statusCodes";
+import { NextFunction, Request, Response } from 'express';
+import { CREATED_CODE, OK_CODE } from '../constants/statusCodes';
+import { BadRequestErr } from '../errors/bad-request-err';
+import { NotFoundCodeErr } from '../errors/not-found-code-err';
+import {ForbiddenErr} from "../errors/forbidden-err";
 
-export const createCard = (req: Request, res: Response) => {
+export const createCard = (req: Request, res: Response, next: NextFunction) => {
   Card.create({
     name: req.body.name,
-    link: req.body.link
+    link: req.body.link,
+    owner: req.body.owner
   })
     .then((user) => res.status(CREATED_CODE).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE).send({
-          message: `Переданы некорректные данные при создании карточки. Ошибка - ${err}`
-        })
-      } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        });
+        throw new BadRequestErr('Переданы некорректные данные при создании карточки');
       }
-    });
+    })
+    .catch(next);
 }
 
-export const getAllCards = (req: Request, res: Response) => {
+export const getAllCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
+    .populate('owner')
     .then((card) => res.status(OK_CODE).send(card))
-    .catch((err) => res.status(SERVER_ERROR_CODE).send({
-      message: `На сервере произошла ошибка - ${err}`
-    }));
+    .catch(next);
 }
 
-export const removeCard = (req: Request, res: Response) => {
-  Card.findByIdAndRemove(req.params.id)
-    .then(card => res.status(OK_CODE).send(card))
-    .catch((err) => {
-      if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-        res.status(NOT_FOUND_CODE).send({
-          message: `Карточка с указанным _id не найдена. Ошибка - ${err}`
-        })
+export const removeCard = (req: Request, res: Response, next: NextFunction) => {
+  Card.findByIdAndRemove(req.params.cardId)
+    .then(card => {
+      if (card) {
+        const ownerId = card.owner.toString();
+
+        if (ownerId === req.user?._id) {
+          res.status(OK_CODE).send({removed: true, data: card})
+        } else {
+          throw new ForbiddenErr('Вы не можете удалить чужую карточку');
+        }
       } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        })
+        throw new NotFoundCodeErr('Карточка с указанным _id не найдена')
       }
-    });
+    })
+    .catch(next)
 }
 
-export const likeCard = (req: Request, res: Response) => {
+export const likeCard = (req: Request, res: Response, next: NextFunction) => {
   Card.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: req.body._id}}, {new: true})
     .then(liked => res.status(OK_CODE).send(liked))
     .catch((err) => {
       if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-        res.status(NOT_FOUND_CODE).send({
-          message: `Передан несуществующий _id карточки. Ошибка - ${err}`
-        })
-      } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        })
+        throw new NotFoundCodeErr('Передан несуществующий _id карточки');
       }
-    });
+    })
+    .catch(next)
 }
 
-export const dislikeCard = (req: Request, res: Response) => {
+export const dislikeCard = (req: Request, res: Response, next: NextFunction) => {
   Card.findByIdAndUpdate(req.params.cardId, {$pull: {likes: req.body._id}}, {new: true})
     .then(disliked => res.status(OK_CODE).send(disliked))
     .catch((err) => {
       if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-        res.status(NOT_FOUND_CODE).send({
-          message: `Передан несуществующий _id карточки. Ошибка - ${err}`
-        })
-      } else {
-        res.status(SERVER_ERROR_CODE).send({
-          message: `На сервере произошла ошибка - ${err}`
-        })
+        throw new NotFoundCodeErr('Передан несуществующий _id карточки');
       }
     })
+    .catch(next);
 }
