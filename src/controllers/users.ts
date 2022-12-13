@@ -9,6 +9,7 @@ import {
 import { BadRequestErr } from '../errors/bad-request-err';
 import { UnauthorizedErr } from '../errors/unauthorized-err';
 import { NotFoundCodeErr } from '../errors/not-found-code-err';
+import { updateInfoUser } from '../utils/updateInfoUser';
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   bcryp.hash(req.body.password, 10)
@@ -52,43 +53,19 @@ export const updateProfileUser = (req: Request, res: Response, next: NextFunctio
     about: req.body.about
   }
 
-  if (req.user) {
-    User.findByIdAndUpdate(req.user._id, updatedProfile, {
-      new: true,
-      runValidators: true,
-      upsert: false
-    })
-      .then(userProfile => {
-        res.status(OK_CODE).send(userProfile)
-      })
-      .catch((err) => {
-        if (err.name === 'ValidationError') {
-          throw new BadRequestErr('Переданы некорректные данные при обновлении пользователя');
-        } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-          throw new NotFoundCodeErr('Пользователь с указанным _id не найден');
-        }
-      })
-      .catch(next)
-  }
+  updateInfoUser(req, res, next, User, updatedProfile, {
+    new: true,
+    runValidators: true,
+    upsert: false
+  });
 }
 
 export const updateAvatarUser = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user) {
-    User.findByIdAndUpdate(req.user._id, {avatar: req.body.avatar}, {
-      new: true,
-      runValidators: true,
-      upsert: false
-    })
-      .then(userAvatar => res.status(OK_CODE).send(userAvatar))
-      .catch((err) => {
-        if (err.name === 'ValidationError') {
-          throw new BadRequestErr('Переданы некорректные данные при обновлении аватара');
-        } else if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
-          throw new NotFoundCodeErr('Пользователь с указанным _id не найден');
-        }
-      })
-      .catch(next)
-  }
+  updateInfoUser(req, res, next, User, {avatar: req.body.avatar}, {
+    new: true,
+    runValidators: true,
+    upsert: false
+  });
 }
 
 export const login = (req: Request, res: Response, next: NextFunction) => {

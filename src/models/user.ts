@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import validator from 'validator';
 
-interface IUser {
+export interface IUser {
   email: string;
   password: string;
   name: string;
