@@ -10,17 +10,23 @@ interface ICard {
 
 const cardSchema = new Schema(
   {
-    name: {type: String, minlength: 2, maxlength: 30, required: true},
-    link: {type: String, required: true, validate: {
+    name: {
+      type: String, minlength: 2, maxlength: 30, required: true,
+    },
+    link: {
+      type: String,
+      required: true,
+      validate: {
         validator(value: string) {
-          return value.match(`^(https?|http):/`) !== null;
+          return value.match('^(https?|http):/') !== null;
         },
-        message: 'Необходимо ввести url'
-      }},
-    owner: {type: Schema.Types.ObjectId, ref: 'user', required: true},
-    likes: {type: [Schema.Types.ObjectId], default: []},
-    createdAt: {type: Date, default: Date.now()}
-  }
-)
+        message: 'Необходимо ввести url',
+      },
+    },
+    owner: { type: Schema.Types.ObjectId, ref: 'user', required: true },
+    likes: { type: [Schema.Types.ObjectId], default: [] },
+    createdAt: { type: Date, default: Date.now() },
+  },
+);
 
-export default model<ICard>('card', cardSchema)
+export default model<ICard>('card', cardSchema);

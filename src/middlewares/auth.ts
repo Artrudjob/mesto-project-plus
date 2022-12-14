@@ -8,14 +8,14 @@ interface ISessionRequest extends Request {
   user?: string | JwtPayload;
 }
 
-
+// eslint-disable-next-line consistent-return
 export default (req: ISessionRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
     return res.status(UNAUTHORIZED_CODE).send({
-      message: 'Необходима авторизация'
-    })
+      message: 'Необходима авторизация',
+    });
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -25,11 +25,11 @@ export default (req: ISessionRequest, res: Response, next: NextFunction) => {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return res.status(UNAUTHORIZED_CODE).send({
-      message: 'Необходима авторизация'
-    })
+      message: 'Необходима авторизация',
+    });
   }
 
   req.user = payload;
 
   next();
-}
+};
