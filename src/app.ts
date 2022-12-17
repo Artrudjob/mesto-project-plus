@@ -9,6 +9,7 @@ import { requestLogger, errorLogger } from './middlewares/logger';
 import { createUser, login } from './controllers/users';
 import { SERVER_ERROR_CODE } from './constants/statusCodes';
 import { PORT, DB_ADDRESS } from '../config';
+import { IStatusError } from './interface/interface';
 
 const app = express();
 const bodyParser = require('body-parser');
@@ -56,7 +57,7 @@ app.use(routerCards);
 app.use(errorLogger);
 
 app.use(errors());
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: IStatusError, req: Request, res: Response, next: NextFunction) => {
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({ message: statusCode === SERVER_ERROR_CODE ? 'На сервере произошла ошибка' : message });

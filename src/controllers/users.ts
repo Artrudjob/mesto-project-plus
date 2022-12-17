@@ -11,6 +11,7 @@ import UnauthorizedErr from '../errors/unauthorized-err';
 import NotFoundCodeErr from '../errors/not-found-code-err';
 import { updateInfoUser } from '../utils/updateInfoUser';
 import { JWT_SECRET } from '../../config';
+import { IUserId } from '../interface/interface';
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   bcryp.hash(req.body.password, 10)
@@ -97,8 +98,8 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
-  // eslint-disable-next-line no-underscore-dangle
-  User.findById({ _id: req.user?._id })
+  const request = req as IUserId;
+  User.findById({_id: request.user._id})
     .then((user) => {
       res.status(OK_CODE).send(user);
     })

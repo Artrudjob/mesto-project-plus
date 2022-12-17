@@ -6,6 +6,7 @@ import { OK_CODE } from '../constants/statusCodes';
 import BadRequestErr from '../errors/bad-request-err';
 // eslint-disable-next-line import/no-named-as-default
 import NotFoundCodeErr from '../errors/not-found-code-err';
+import {IUserId} from "../interface/interface";
 
 interface IUserData {
   name?: string;
@@ -28,9 +29,9 @@ export const updateInfoUser = (
   userData: IUserData,
   options: IOptions,
 ) => {
-  if (req.user) {
+  const request = req as IUserId;
     // eslint-disable-next-line no-underscore-dangle
-    model.findByIdAndUpdate(req.user._id, userData, options)
+    model.findByIdAndUpdate(request.user._id, userData, options)
       .then((user) => {
         res.status(OK_CODE).send(user);
       })
@@ -43,5 +44,4 @@ export const updateInfoUser = (
         }
       })
       .catch(next);
-  }
 };

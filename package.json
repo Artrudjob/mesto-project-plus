@@ -10,7 +10,6 @@
     "start": "ts-node src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "comment-for-the-reviewer": "Напишите пожалуйста какие ошибки появляются при использование команд npm run start и npm run dev. Я не могу как то это пофиксить, так как у меня запускается проект с использованием этих команд. Спасибо",
   "author": "Artyom Rudenko",
   "license": "ISC",
   "devDependencies": {

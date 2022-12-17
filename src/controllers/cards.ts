@@ -4,6 +4,7 @@ import { CREATED_CODE, OK_CODE } from '../constants/statusCodes';
 import BadRequestErr from '../errors/bad-request-err';
 import NotFoundCodeErr from '../errors/not-found-code-err';
 import ForbiddenErr from '../errors/forbidden-err';
+import { IUserId } from '../interface/interface';
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
   Card.create({
@@ -28,13 +29,13 @@ export const getAllCards = (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const removeCard = (req: Request, res: Response, next: NextFunction) => {
+  const request = req as IUserId;
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (card) {
         const ownerId = card.owner.toString();
 
-        // eslint-disable-next-line no-underscore-dangle
-        if (ownerId === req.user?._id) {
+        if (ownerId === request.user._id) {
           res.status(OK_CODE).send({ removed: true, data: card });
         } else {
           throw new ForbiddenErr('Вы не можете удалить чужую карточку');
