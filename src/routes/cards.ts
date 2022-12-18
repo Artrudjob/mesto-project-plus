@@ -40,5 +40,4 @@ router.delete('/cards/:cardId/likes', celebrate({
   }),
 }), dislikeCard);
 
-// eslint-disable-next-line import/prefer-default-export
 export { router };

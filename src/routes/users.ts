@@ -39,5 +39,4 @@ router.patch('/users/me/avatar', celebrate({
   }),
 }), updateAvatarUser);
 
-// eslint-disable-next-line import/prefer-default-export
 export { router };

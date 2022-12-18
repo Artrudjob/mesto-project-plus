@@ -83,7 +83,6 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
           }
 
           const token = jwt.sign(
-            // eslint-disable-next-line no-underscore-dangle
             { _id: user._id.toString() },
             JWT_SECRET,
             { expiresIn: '7d' },
@@ -99,7 +98,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
 export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
   const request = req as IUserId;
-  User.findById({_id: request.user._id})
+  User.findById({ _id: request.user._id })
     .then((user) => {
       res.status(OK_CODE).send(user);
     })

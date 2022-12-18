@@ -17,15 +17,12 @@ const bodyParser = require('body-parser');
 async function run() {
   try {
     await mongoose.connect(`${DB_ADDRESS}`);
-    // eslint-disable-next-line no-console
     console.log('Подключение установлено!');
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.log(err);
   }
 }
 
-// eslint-disable-next-line no-console
 run().catch(console.log);
 
 app.use(cookieParser());
@@ -64,6 +61,5 @@ app.use((err: IStatusError, req: Request, res: Response, next: NextFunction) => 
 });
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
   console.log(`Example app listening on port ${PORT}`);
 });

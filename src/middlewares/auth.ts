@@ -8,7 +8,6 @@ interface ISessionRequest extends Request {
   user?: string | JwtPayload;
 }
 
-// eslint-disable-next-line consistent-return
 export default (req: ISessionRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 

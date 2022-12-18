@@ -48,11 +48,9 @@ export const removeCard = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const likeCard = (req: Request, res: Response, next: NextFunction) => {
-  // eslint-disable-next-line no-underscore-dangle
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.body._id } }, { new: true })
     .then((liked) => res.status(OK_CODE).send(liked))
     .catch((err) => {
-      // eslint-disable-next-line no-bitwise
       if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
         throw new NotFoundCodeErr('Передан несуществующий _id карточки');
       }
@@ -61,11 +59,9 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const dislikeCard = (req: Request, res: Response, next: NextFunction) => {
-  // eslint-disable-next-line no-underscore-dangle
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.body._id } }, { new: true })
     .then((disliked) => res.status(OK_CODE).send(disliked))
     .catch((err) => {
-      // eslint-disable-next-line no-bitwise
       if (err.message && ~err.message.indexOf('Cast to ObjectId failed for value')) {
         throw new NotFoundCodeErr('Передан несуществующий _id карточки');
       }
